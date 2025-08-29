@@ -1,15 +1,15 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { ZodError } from 'zod';
 import { Logger } from '../../../core/Logger';
 import { ValidationException } from '../../../core/exceptions/ValidationException';
 import { IBaseService } from '../../rooms/services/IBaseService';
 import { User, createUserSchema } from '../schemas/user';
-import { RequestPaginateFilterd } from './types';
+import { CreateRoomRequest, RequestPaginateFilterd } from './types';
 
 export class UserController {
     constructor(private service: IBaseService<User>) { }
 
-    public async create(req: Request, res: Response): Promise<Response> {
+    public async create(req: CreateRoomRequest, res: Response): Promise<Response> {
         try {
             const data = createUserSchema.parse(req.body);
             const newUser = await this.service.create(data);

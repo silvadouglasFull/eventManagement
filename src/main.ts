@@ -1,7 +1,12 @@
+import { authMiddleware } from 'core/auth/AuthMiddleware';
 import { ReservationController } from 'modules/reservations/controllers/ReservationController';
 import { ReservationRepository } from 'modules/reservations/repositories/ReservationRepository';
 import { createReservationRouter } from 'modules/reservations/routes';
 import { ReservationService } from 'modules/reservations/services/ReservationService';
+import { UserController } from 'modules/users/controllers/UserController';
+import { UserRepository } from 'modules/users/repositories/UserRepository';
+import { createUserRouter } from 'modules/users/routes';
+import { UserService } from 'modules/users/services/UserService';
 import { Logger } from './core/Logger';
 import { connectToDatabase } from './database';
 import { App } from './index';
@@ -25,14 +30,22 @@ async function bootstrap() {
         const reservationService = new ReservationService(reservationRepository);
         const reservationController = new ReservationController(reservationService);
         const reservationRouter = createReservationRouter(reservationController);
+        // Injeção de Dependências - Módulo de Users
+        const userRepository = new UserRepository(db);
+        const userService = new UserService(userRepository);
+        const userController = new UserController(userService);
+        const userRouter = createUserRouter(userController);
         // Criação das Rotas
         const roomRouter = createRoomRouter(roomController);
         const app = new App(PORT);
 
         // Integrar o roteador ao Express
+        app.server.use(authMiddleware)
         app.server.use('/rooms', roomRouter);
         app.server.use('/reservations', reservationRouter);
+        app.server.use('/users', userRouter);
 
+        Logger.info('Bootstrap', 'Application started successfully.')
         // Iniciar o servidor
         app.listen();
     } catch (error) {
