@@ -1,3 +1,4 @@
+import { ValidationException } from 'core/exceptions/ValidationException';
 import { and, between, eq } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { v4 as uuidv4 } from 'uuid';
@@ -87,12 +88,23 @@ export class ReservationRepository implements IBaseRepository<Reservation> {
         }
     }
 
-    public async delete(id: string): Promise<boolean> {
+    public async cancel(id: string, userId: string): Promise<boolean> {
         try {
-            await this.db.update(reservations)
+            const [affectedRows] = await this.db.update(reservations)
                 .set({ is_cancelled: 1 })
-                .where(eq(reservations.id, id));
-
+                .where(
+                    and(
+                        eq(reservations.id, id),
+                        eq(reservations.user_id, userId)
+                    )
+                );
+            if (affectedRows.affectedRows === 0) {
+                throw new ValidationException([{
+                    code: 'custom',
+                    message: 'Reservation not found or does not belong to the user.',
+                    path: ['id']
+                }]);
+            }
             return true;
         } catch (error) {
             Logger.error('ReservationRepository', `Error deleting reservation with id ${id}.`, error);

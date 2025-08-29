@@ -30,11 +30,7 @@ export class ReservationService implements IBaseService<Reservation> {
         return (this.repository as any).findAll(page, limit, filters);
     }
 
-    public async cancel(id: string): Promise<boolean> {
-        const reservation = await (this.repository as any).findOneById(id);
-        if (!reservation) {
-            return false;
-        }
-        return (this.repository as any).delete(id);
+    public async cancel(id: string, userId: string): Promise<boolean> {
+        return (this.repository as any).cancel(id, userId);
     }
 }

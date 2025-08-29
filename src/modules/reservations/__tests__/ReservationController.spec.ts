@@ -1,5 +1,6 @@
 import { AuthenticatedRequest } from 'core/auth/AuthMiddleware';
 import { Request, Response } from 'express';
+import { v4 } from 'uuid';
 import { ValidationException } from '../../../core/exceptions/ValidationException';
 import { IBaseService } from '../../../services/IBaseService';
 import { ReservationController } from '../controllers/ReservationController';
@@ -86,14 +87,19 @@ describe('ReservationController', () => {
             success: true,
         });
     });
-    // Teste para o método 'cancel' com sucesso
     it('should cancel a reservation and return a 200 status', async () => {
-        mockRequest.params = { id: 'uuid-to-delete' };
+        // Mocks da requisição, agora com user e params
+        const uuid1 = v4()
+        const uuid2 = v4()
+        mockRequest.params = { id: uuid1 };
+        mockRequest.user = { id: uuid2, email: 'test@example.com' };
+
+        // O serviço irá receber a chamada com os dois IDs
         mockReservationService.cancel.mockResolvedValue(true);
 
-        await reservationController.cancel(mockRequest as Request<{ id: string }>, mockResponse as Response);
+        await reservationController.cancel(mockRequest as AuthenticatedRequest, mockResponse as Response);
 
-        expect(mockReservationService.cancel).toHaveBeenCalledWith('uuid-to-delete');
+        expect(mockReservationService.cancel).toHaveBeenCalledWith(uuid1, uuid2);
         expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({
             message: 'Reservation cancelled successfully!',
@@ -101,18 +107,23 @@ describe('ReservationController', () => {
         });
     });
 
-    // Teste para o método 'cancel' quando a reserva não é encontrada
-    it('should return a 404 status when a reservation to cancel is not found', async () => {
-        mockRequest.params = { id: 'uuid-not-found' };
-        mockReservationService.cancel.mockResolvedValue(false);
+    // Teste para o método 'cancel' quando a reserva não pertence ao usuário
+    it('should return a 404 status when a reservation to cancel does not belong to the user', async () => {
+        mockRequest.params = { id: v4() };
+        mockRequest.user = { id: v4(), email: 'test@example.com' };
 
-        await reservationController.cancel(mockRequest as Request<{ id: string }>, mockResponse as Response);
+        // Simular um erro de validação (a exceção lançada pelo serviço)
+        mockReservationService.cancel.mockRejectedValue(new ValidationException([
+            {
+                code: 'custom',
+                message: expect.any(String),
+                path: ['id'],
+            }
+        ]));
 
-        expect(mockReservationService.cancel).toHaveBeenCalledWith('uuid-not-found');
+        await reservationController.cancel(mockRequest as AuthenticatedRequest, mockResponse as Response);
+
+        // Espera um 404
         expect(mockResponse.status).toHaveBeenCalledWith(404);
-        expect(mockResponse.json).toHaveBeenCalledWith({
-            message: 'Reservation not found or already cancelled.',
-            success: false,
-        });
     });
 });

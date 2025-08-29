@@ -1,6 +1,7 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { ZodError } from 'zod';
 import { Logger } from '../../../core/Logger';
+import { AuthenticatedRequest } from '../../../core/auth/AuthMiddleware';
 import { ValidationException } from '../../../core/exceptions/ValidationException';
 import { IBaseService } from '../../../services/IBaseService';
 import { Reservation, createReservationSchema } from '../schemas/reservation';
@@ -99,10 +100,11 @@ export class ReservationController {
             });
         }
     }
-    public async cancel(req: Request<{ id: string }>, res: Response): Promise<Response> {
+    public async cancel(req: AuthenticatedRequest, res: Response): Promise<Response> {
         try {
             const { id } = req.params;
-            const result = await this.service.cancel(id);
+            const user_id = req.user?.id;
+            const result = await this.service.cancel(id, user_id as string);
 
             if (!result) {
                 return res.status(404).json({
@@ -116,6 +118,22 @@ export class ReservationController {
                 success: true,
             });
         } catch (error) {
+            if (error instanceof ZodError) {
+                // Logger.error('ReservationController', 'Not found reservation to cancel.', error);
+                return res.status(404).json({
+                    message: error.message,
+                    errors: error.message,
+                    success: false,
+                });
+            }
+            if (error instanceof ValidationException) {
+                Logger.error('ReservationController', 'Not found reservation to cancel.', error);
+                return res.status(404).json({
+                    message: error.errors[0].message,
+                    errors: error.errors.map(err => err.message).join(' '),
+                    success: false,
+                });
+            }
             Logger.error('ReservationController', 'Error cancelling reservation.', error);
             return res.status(500).json({
                 message: 'Internal server error.',
