@@ -1,4 +1,9 @@
+import cookieParser from 'cookie-parser';
 import { authMiddleware } from 'core/auth/AuthMiddleware';
+import { AuthController } from 'modules/auth/controllers/AuthController';
+import { AuthRepository } from 'modules/auth/repositories/AuthRepository';
+import { createAuthRouter } from 'modules/auth/routes';
+import { AuthService } from 'modules/auth/services/AuthService';
 import { ReservationController } from 'modules/reservations/controllers/ReservationController';
 import { ReservationRepository } from 'modules/reservations/repositories/ReservationRepository';
 import { createReservationRouter } from 'modules/reservations/routes';
@@ -35,11 +40,19 @@ async function bootstrap() {
         const userService = new UserService(userRepository);
         const userController = new UserController(userService);
         const userRouter = createUserRouter(userController);
+
+        // Injeção de Dependências - Módulo de Users
+        const authRepository = new AuthRepository(db);
+        const authService = new AuthService(authRepository);
+        const authController = new AuthController(authService);
+        const authRouter = createAuthRouter(authController);
         // Criação das Rotas
         const roomRouter = createRoomRouter(roomController);
         const app = new App(PORT);
 
         // Integrar o roteador ao Express
+        app.server.use(cookieParser());
+        app.server.use('/auth', authRouter)
         app.server.use(authMiddleware)
         app.server.use('/rooms', roomRouter);
         app.server.use('/reservations', reservationRouter);

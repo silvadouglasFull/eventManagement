@@ -8,14 +8,10 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-        return res.status(401).json({ message: 'Authorization header missing.', success: false });
-    }
+    const token = req.cookies.token;
 
-    const [bearer, token] = authHeader.split(' ');
-    if (bearer !== 'Bearer' || !token) {
-        return res.status(401).json({ message: 'Invalid token format.', success: false });
+    if (!token) {
+        return res.status(401).json({ message: 'Authorization token missing.', success: false });
     }
 
     const decodedPayload = JwtManager.validateToken(token);

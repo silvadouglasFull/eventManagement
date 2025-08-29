@@ -12,11 +12,20 @@ export class Logger {
     /**
  * Logs a message with a custom tag and a red color for errors.
  * @param tag The tag for the log message (e.g., 'Repository').
- * @param message The error message to log.
- * @param error The error object to be logged.
+ * @param message The info message to log.
  */
     public static info(tag: string, message: string): void {
         const timestamp = new Date().toISOString();
-        console.error(`[${timestamp}] [${tag}] [ERROR] - ${message}`);
+        console.error(`[${timestamp}] [${tag}] [INFO] - ${message}`);
+    }
+    /**
+    * Logs a message with a custom tag and a red color for errors.
+    * @param tag The tag for the log message (e.g., 'Repository').
+    * @param message The warn message to log.
+    * @param warn The error object to be logged.
+    */
+    public static warn(tag: string, message: string, warn: unknown): void {
+        const timestamp = new Date().toISOString();
+        console.warn(`[${timestamp}] [${tag}] [WARN] - ${message}`, warn);
     }
 }

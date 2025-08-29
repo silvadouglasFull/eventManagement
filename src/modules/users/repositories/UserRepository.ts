@@ -1,18 +1,21 @@
+import bcrypt from 'bcryptjs';
 import { IBaseRepository } from 'database/repository/IBaseRepository';
 import { and, eq } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '../../../core/Logger';
 import { User, users } from '../schemas/user';
-
 export class UserRepository implements IBaseRepository<User> {
     constructor(private db: MySql2Database) { }
 
     public async create(data: Omit<User, 'id'>): Promise<User | null> {
         try {
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(data.password, saltRounds);
             const newUser: User = {
                 id: uuidv4(),
                 ...data,
+                password: hashedPassword,
             };
             await this.db.insert(users).values(newUser);
             return newUser;

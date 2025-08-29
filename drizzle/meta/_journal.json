@@ -15,6 +15,13 @@
       "when": 1756487126195,
       "tag": "0001_add_users_table",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1756490188504,
+      "tag": "0002_add_password_to_users",
+      "breakpoints": true
     }
   ]
 }
