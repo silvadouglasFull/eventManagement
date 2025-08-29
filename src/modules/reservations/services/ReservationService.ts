@@ -8,7 +8,7 @@ import { Reservation } from '../schemas/reservation';
 export class ReservationService implements IBaseService<Reservation> {
     constructor(private repository: IBaseRepository<Reservation>) { }
 
-    public async create(data: Omit<Reservation, 'id' | 'deletedAt'>): Promise<Reservation | null> {
+    public async create(data: Omit<Reservation, 'id'>): Promise<Reservation | null> {
         const { room_id, start_time, end_time } = data;
 
         // Validar conflito de horários

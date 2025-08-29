@@ -1,6 +1,6 @@
-import { IBaseRepository } from 'database/repository/IBaseRepository';
-import { IBaseService } from '../../rooms/services/IBaseService';
+import { IBaseRepository } from '../repositories/IBaseRepository';
 import { User } from '../schemas/user';
+import { IBaseService } from './IBaseService';
 
 export class UserService implements IBaseService<User> {
     constructor(private repository: IBaseRepository<User>) { }
@@ -9,7 +9,7 @@ export class UserService implements IBaseService<User> {
         return this.repository.create(data);
     }
 
-    public async findAll(page: number, limit: number, filters?: { id?: string; name?: string }): Promise<User[] | null> {
+    public async findAll(page: number, limit: number, filters?: { id?: string; name?: string }): Promise<Omit<User, 'password'>[] | null> {
         return this.repository.findAll(page, limit, filters);
     }
 }

@@ -1,24 +1,25 @@
 import bcrypt from 'bcryptjs';
-import { IBaseRepository } from 'database/repository/IBaseRepository';
 import { and, eq } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '../../../core/Logger';
 import { User, users } from '../schemas/user';
+import { IBaseRepository } from './IBaseRepository';
 export class UserRepository implements IBaseRepository<User> {
     constructor(private db: MySql2Database) { }
 
-    public async create(data: Omit<User, 'id'>): Promise<User | null> {
+    public async create(data: Omit<User, 'id' | 'created_at'>): Promise<User | null> {
         try {
             const saltRounds = 10;
             const hashedPassword = await bcrypt.hash(data.password, saltRounds);
-            const newUser: User = {
+            const newUser: Omit<User, 'created_at'> = {
                 id: uuidv4(),
                 ...data,
                 password: hashedPassword,
             };
-            await this.db.insert(users).values(newUser);
-            return newUser;
+            await this.db.insert(users).values(newUser)
+            const [user] = await this.db.select().from(users).where(eq(users.id, newUser.id)).limit(1);
+            return user ?? null
         } catch (error) {
             Logger.error('UserRepository', 'Error creating a new user.', error);
             return null;
@@ -29,7 +30,7 @@ export class UserRepository implements IBaseRepository<User> {
         page: number,
         limit: number,
         filters?: { id?: string; name?: string }
-    ): Promise<User[] | null> {
+    ): Promise<Omit<User, 'password'>[] | null> {
         try {
             const offset = (page - 1) * limit;
             const whereConditions = [];

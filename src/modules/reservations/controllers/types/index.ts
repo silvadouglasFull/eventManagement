@@ -1,3 +1,4 @@
+import { JwtPayload } from "core/auth/types";
 import { Request } from "express";
 import { createReservationSchema } from "modules/reservations/schemas/reservation";
 import z from "zod";
@@ -5,6 +6,7 @@ import z from "zod";
 // Define o tipo para o corpo da requisição de criação de reserva
 export interface CreateReservationRequest extends Request {
     body: z.infer<typeof createReservationSchema>;
+    user?: JwtPayload
 }
 export interface Filters {
     id?: string;

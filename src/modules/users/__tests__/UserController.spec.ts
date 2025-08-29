@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import { IBaseService } from '../../rooms/services/IBaseService';
 import { UserController } from '../controllers/UserController';
 import { User } from '../schemas/user';
+import { IBaseService } from '../services/IBaseService';
 
 describe('UserController', () => {
     let userController: UserController;
-    let mockUserService: jest.Mocked<IBaseService<User>>;
+    let mockUserService: jest.Mocked<IBaseService<Omit<User, 'password'>>>;
     let mockRequest: Partial<Request>;
     let mockResponse: Partial<Response>;
 
@@ -30,7 +30,7 @@ describe('UserController', () => {
     // Teste para o método 'create' com dados válidos
     it('should create a user and return a 201 status with the new user data', async () => {
         // Configurar o mock para a requisição
-        const userPayload = { name: 'João da Silva', email: 'joao.silva@example.com' };
+        const userPayload = { name: 'João da Silva', email: 'joao.silva@example.com', password: '1234456' };
         const createdUser = { id: 'uuid-123', ...userPayload, created_at: new Date() };
 
         mockRequest.body = userPayload;

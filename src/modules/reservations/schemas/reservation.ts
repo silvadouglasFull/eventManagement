@@ -1,23 +1,38 @@
-import { sql } from 'drizzle-orm';
-import { datetime, mysqlTable, varchar } from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
+import { datetime, mysqlTable, tinyint, varchar } from 'drizzle-orm/mysql-core';
 import { z } from 'zod';
+import { rooms } from '../../rooms/schemas/room';
+import { users } from '../../users/schemas/user';
 
-// Schema do Drizzle (para o banco de dados)
 export const reservations = mysqlTable('reservations', {
     id: varchar('id', { length: 36 }).primaryKey(),
-    room_id: varchar('room_id', { length: 36 }).notNull(),
+    room_id: varchar('room_id', { length: 36 }).notNull().references(() => rooms.id),
+    user_id: varchar('user_id', { length: 36 }).notNull().references(() => users.id),
     start_time: datetime('start_time').notNull(),
     end_time: datetime('end_time').notNull(),
-    notes: varchar('notes', { length: 255 }),
-    deleted_at: datetime('deleted_at').default(sql`null`),
+    created_at: datetime('created_at').notNull().default(new Date()),
+    is_cancelled: tinyint('is_cancelled').notNull().default(0),
 });
 
-// Tipo TypeScript inferido do schema do Drizzle
+export const reservationsRelations = relations(reservations, ({ one }) => ({
+    user: one(users, {
+        fields: [reservations.user_id],
+        references: [users.id],
+    }),
+    room: one(rooms, {
+        fields: [reservations.room_id],
+        references: [rooms.id],
+    }),
+}));
+
 export type Reservation = typeof reservations.$inferSelect;
-// Schema de validação Zod (para as requisições)
+
 export const createReservationSchema = z.object({
-    room_id: z.string({ error: 'Room ID is required.' }).uuid({ message: 'Room ID must be a valid UUID.' }),
-    start_time: z.string({ error: 'Start time is required.' }),
-    end_time: z.string({ error: 'End time is required.' }),
-    notes: z.string().optional(),
+    room_id: z.string({ error: 'Room ID is required.' }).uuid({ message: 'Invalid room ID.' }),
+    start_time: z.string({ error: 'Start time is required.' }).datetime({ message: 'Invalid start time.' }),
+    end_time: z.string({ error: 'End time is required.' }).datetime({ message: 'Invalid end time.' }),
+});
+
+export const filterReservationSchema = z.object({
+    room_id: z.string().uuid().optional(),
 });

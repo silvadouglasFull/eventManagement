@@ -1,11 +1,9 @@
+import { authMiddleware } from 'core/auth/AuthMiddleware';
 import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
 
 export const createUserRouter = (userController: UserController): Router => {
     const userRouter = Router();
-
-    userRouter.get('/', (req, res) => userController.findAll(req, res));
-    userRouter.post('/', (req, res) => userController.create(req, res));
-
+    userRouter.get('/', authMiddleware, (req, res) => userController.findAll(req, res));
     return userRouter;
 };

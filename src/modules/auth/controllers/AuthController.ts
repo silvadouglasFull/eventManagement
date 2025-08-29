@@ -1,14 +1,15 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { ZodError } from 'zod';
 import { ValidationException } from '../../../core/exceptions/ValidationException';
 import { Logger } from '../../../core/Logger';
 import { loginSchema } from '../schemas/loginSchema';
 import { AuthService } from '../services/AuthService';
+import { RequestLogin } from './types';
 
 export class AuthController {
     constructor(private authService: AuthService) { }
 
-    public async login(req: Request, res: Response): Promise<Response> {
+    public async login(req: RequestLogin, res: Response): Promise<Response> {
         try {
             const { email, password } = loginSchema.parse(req.body);
 

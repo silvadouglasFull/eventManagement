@@ -11,15 +11,21 @@ export class ReservationController {
 
     public async create(req: CreateReservationRequest, res: Response): Promise<Response> {
         try {
-            const parsedData = createReservationSchema.parse(req.body);
-            const data = {
-                ...parsedData,
-                start_time: new Date(parsedData.start_time),
-                end_time: new Date(parsedData.end_time),
-                notes: parsedData.notes || null,
-                deleted_at: null
-            };
-            const newReservation = await this.service.create(data);
+            const user_id = req?.user?.id;
+            if (!user_id) {
+                return res.status(401).json({ message: 'User not authenticated.', success: false });
+            }
+
+            const reservationData = createReservationSchema.parse(req.body);
+
+            const newReservation = await this.service.create({
+                ...reservationData,
+                start_time: new Date(reservationData.start_time),
+                end_time: new Date(reservationData.end_time),
+                user_id,
+                is_cancelled: 0,
+                created_at: new Date()
+            });
 
             if (!newReservation) {
                 return res.status(500).json({

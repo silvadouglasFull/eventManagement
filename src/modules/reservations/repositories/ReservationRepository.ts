@@ -1,4 +1,4 @@
-import { and, between, eq, isNull } from 'drizzle-orm';
+import { and, between, eq } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '../../../core/Logger';
@@ -10,6 +10,7 @@ export class ReservationRepository implements IBaseRepository<Reservation> {
 
     public async create(data: Omit<Reservation, 'id'>): Promise<Reservation | null> {
         try {
+
             const newReservation: Reservation = {
                 id: uuidv4(),
                 ...data,
@@ -29,7 +30,7 @@ export class ReservationRepository implements IBaseRepository<Reservation> {
     ): Promise<Reservation[] | null> {
         try {
             const offset = (page - 1) * limit;
-            const whereConditions = [isNull(reservations.deleted_at)];
+            const whereConditions = [eq(reservations.is_cancelled, 0)];
 
             if (filters?.id) {
                 whereConditions.push(eq(reservations.id, filters.id));
@@ -61,7 +62,7 @@ export class ReservationRepository implements IBaseRepository<Reservation> {
                     and(
                         eq(reservations.room_id, roomId),
                         between(reservations.start_time, new Date(startTime), new Date(endTime)),
-                        isNull(reservations.deleted_at),
+                        eq(reservations.is_cancelled, 0),
                     )
                 );
 
@@ -76,7 +77,7 @@ export class ReservationRepository implements IBaseRepository<Reservation> {
         try {
             const result = await this.db.select()
                 .from(reservations)
-                .where(and(eq(reservations.id, id), isNull(reservations.deleted_at)))
+                .where(and(eq(reservations.id, id), eq(reservations.is_cancelled, 0)))
                 .limit(1);
 
             return result[0] || null;
@@ -89,7 +90,7 @@ export class ReservationRepository implements IBaseRepository<Reservation> {
     public async delete(id: string): Promise<boolean> {
         try {
             await this.db.update(reservations)
-                .set({ deleted_at: new Date() })
+                .set({ is_cancelled: 1 })
                 .where(eq(reservations.id, id));
 
             return true;

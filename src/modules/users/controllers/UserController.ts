@@ -2,8 +2,8 @@ import { Response } from 'express';
 import { ZodError } from 'zod';
 import { Logger } from '../../../core/Logger';
 import { ValidationException } from '../../../core/exceptions/ValidationException';
-import { IBaseService } from '../../rooms/services/IBaseService';
 import { User, createUserSchema } from '../schemas/user';
+import { IBaseService } from '../services/IBaseService';
 import { CreateRoomRequest, RequestPaginateFilterd } from './types';
 
 export class UserController {
