@@ -1,30 +1,30 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ZodError } from 'zod';
-import { ValidationException } from '../../../core/exceptions/ValidationException';
 import { Logger } from '../../../core/Logger';
-import { createRoomSchema, Room } from '../schemas/room';
-import { IBaseService } from '../services/IBaseService';
-import { CreateRoomRequest, RequestPaginateFilterd } from './types';
+import { ValidationException } from '../../../core/exceptions/ValidationException';
+import { IBaseService } from '../../rooms/services/IBaseService';
+import { User, createUserSchema } from '../schemas/user';
+import { RequestPaginateFilterd } from './types';
 
-export class RoomController {
-    constructor(private service: IBaseService<Room>) { }
+export class UserController {
+    constructor(private service: IBaseService<User>) { }
 
-    public async create(req: CreateRoomRequest, res: Response): Promise<Response> {
+    public async create(req: Request, res: Response): Promise<Response> {
         try {
-            const data = createRoomSchema.parse(req.body);
-            const newRoom = await this.service.create(data);
+            const data = createUserSchema.parse(req.body);
+            const newUser = await this.service.create(data);
 
-            if (!newRoom) {
+            if (!newUser) {
                 return res.status(500).json({
-                    message: 'Failed to create room.',
+                    message: 'Failed to create user.',
                     data: null,
                     success: false,
                 });
             }
 
             return res.status(201).json({
-                message: 'Room created successfully!',
-                data: newRoom,
+                message: 'User created successfully!',
+                data: newUser,
                 success: true,
             });
         } catch (error) {
@@ -37,14 +37,14 @@ export class RoomController {
                 });
             }
             if (error instanceof ValidationException) {
-                Logger.error('ReservationController', 'Conflicting reservation for new reservation.', error);
+                Logger.error('UserController', 'Validation failed for new user.', error);
                 return res.status(400).json({
                     message: 'Validation failed.',
-                    errors: error.errors.map((err) => err.message).join(''),
+                    errors: error.errors,
                     success: false,
                 });
             }
-            Logger.error('RoomController', 'Internal error creating a new room.', error);
+            Logger.error('UserController', 'Internal error creating a new user.', error);
             return res.status(500).json({
                 message: 'Internal server error.',
                 data: null,
@@ -61,23 +61,24 @@ export class RoomController {
                 id: req.query.id,
                 name: req.query.name,
             };
-            const allRooms = await this.service.findAll(page, limit, filters);
 
-            if (!allRooms) {
-                return res.status(404).json({
-                    message: 'No rooms found to fetch rooms.',
+            const allUsers = await this.service.findAll(page, limit, filters);
+
+            if (!allUsers) {
+                return res.status(500).json({
+                    message: 'Failed to fetch users.',
                     data: null,
                     success: false,
                 });
             }
 
             return res.status(200).json({
-                message: 'Rooms fetched successfully!',
-                data: allRooms,
+                message: 'Users fetched successfully!',
+                data: allUsers,
                 success: true,
             });
         } catch (error) {
-            Logger.error('RoomController', 'Error fetching paginated and filtered rooms.', error);
+            Logger.error('UserController', 'Error fetching paginated and filtered users.', error);
             return res.status(500).json({
                 message: 'Internal server error.',
                 data: null,
