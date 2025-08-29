@@ -15,7 +15,7 @@ You need to have Docker and Docker Compose installed on your system.
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/silvadouglasFull/eventManagement
+    git clone [https://github.com/silvadouglasFull/eventManagement](https://github.com/silvadouglasFull/eventManagement)
     cd eventManagement
     ```
 
@@ -32,6 +32,7 @@ You need to have Docker and Docker Compose installed on your system.
     # API Environment Variables
     PORT=3000
     DB_HOST=db
+    JWT_SECRET=your_secret_key_change_me
     ```
 
 3.  **Start containers and install dependencies:**
@@ -48,9 +49,40 @@ You need to have Docker and Docker Compose installed on your system.
     docker-compose exec api npx drizzle-kit migrate
     ```
 
-## API Endpoints
+## Authentication and API Endpoints
 
-The API exposes the following endpoints. You can use the `curl` commands below to test each one.
+All authenticated routes now require a JWT passed via an **HttpOnly cookie named `token`**.
+
+### **Authentication Module (`/auth`)**
+
+#### `POST /auth/login` - Authenticate a user
+
+Authenticates a user with email and password. A successful login returns a JWT in an `HttpOnly` cookie.
+
+```bash
+curl --location --request POST 'http://localhost:3000/auth/login' \
+--header 'Content-Type: application/json' \
+--data '{
+    "email": "user@example.com",
+    "password": "my-secure-password"
+}'
+```
+
+### **Users Module (`/users`)**
+
+#### `POST /users` - Create a new user
+
+Creates a new user. Passwords are automatically hashed and stored securely.
+
+```bash
+curl --location 'http://localhost:3000/users' \
+--header 'Content-Type: application/json' \
+--data '{
+    "name": "João da Silva",
+    "email": "joao@example.com",
+    "password": "my-strong-password"
+}'
+```
 
 ### **Rooms Module (`/rooms`)**
 
@@ -59,6 +91,7 @@ The API exposes the following endpoints. You can use the `curl` commands below t
 Creates a new meeting room.
 
 ```bash
+# This route does not require authentication
 curl --location 'http://localhost:3000/rooms' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -71,6 +104,7 @@ curl --location 'http://localhost:3000/rooms' \
 Lists all meeting rooms with support for pagination and filtering.
 
 ```bash
+# This route does not require authentication
 # List all rooms (default pagination: page=1, limit=10)
 curl --location 'http://localhost:3000/rooms'
 
@@ -78,16 +112,22 @@ curl --location 'http://localhost:3000/rooms'
 curl --location 'http://localhost:3000/rooms?page=2&limit=5'
 ```
 
+---
+
 ### **Reservations Module (`/reservations`)**
+
+**Note:** All endpoints in this module are now protected and require a valid JWT.
 
 #### `POST /reservations` - Create a new reservation
 
-Creates a new reservation for a specific room and time slot. The business logic prevents overlapping schedules.
+Creates a new reservation for a specific room and time slot, associated with the authenticated user.
 
 ```bash
-# First, create a room and use its ID
-curl --location 'http://localhost:3000/reservations' \
+# Requires an authenticated session (login) to get the 'token' cookie.
+# Replace with a valid room UUID and a valid date/time.
+curl --location --request POST 'http://localhost:3000/reservations' \
 --header 'Content-Type: application/json' \
+--header 'Cookie: token=YOUR_AUTH_TOKEN_HERE' \
 --data '{
     "room_id": "REPLACE_WITH_A_VALID_ROOM_UUID",
     "start_time": "2025-08-28T14:00:00Z",
@@ -97,22 +137,27 @@ curl --location 'http://localhost:3000/reservations' \
 
 #### `GET /reservations` - List reservations
 
-Lists all reservations with support for pagination and filtering by room ID.
+Lists reservations with support for pagination and filtering by `room_id`. By default, it lists only the authenticated user's reservations.
 
 ```bash
-# List all reservations
-curl --location 'http://localhost:3000/reservations'
+# Requires an authenticated session (login) to get the 'token' cookie.
+# List all reservations for the authenticated user
+curl --location 'http://localhost:3000/reservations' \
+--header 'Cookie: token=YOUR_AUTH_TOKEN_HERE'
 
 # Example with filtering by room ID
-curl --location 'http://localhost:3000/reservations?room_id=REPLACE_WITH_A_VALID_ROOM_UUID'
+curl --location 'http://localhost:3000/reservations?room_id=REPLACE_WITH_A_VALID_ROOM_UUID' \
+--header 'Cookie: token=YOUR_AUTH_TOKEN_HERE'
 ```
 
 #### `DELETE /reservations/:id` - Cancel a reservation (Soft Delete)
 
-Safely cancels a reservation using a soft delete.
+Safely cancels a reservation using a soft delete. Now, a user can only cancel their own reservations.
 
 ```bash
-curl --location --request DELETE 'http://localhost:3000/reservations/REPLACE_WITH_A_VALID_RESERVATION_ID'
+# Requires an authenticated session.
+curl --location --request DELETE 'http://localhost:3000/reservations/REPLACE_WITH_A_VALID_RESERVATION_ID' \
+--header 'Cookie: token=YOUR_AUTH_TOKEN_HERE'
 ```
 
 ## Testing
