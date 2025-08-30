@@ -29,8 +29,9 @@ export type Reservation = typeof reservations.$inferSelect;
 
 export const createReservationSchema = z.object({
     room_id: z.string({ error: 'Room ID is required.' }).uuid({ message: 'Invalid room ID.' }),
-    start_time: z.string({ error: 'Start time is required.' }).datetime({ message: 'Invalid start time.' }),
-    end_time: z.string({ error: 'End time is required.' }).datetime({ message: 'Invalid end time.' }),
+    start_time: z.string({ error: 'Start date is required.' }).datetime({ message: 'Invalid start date.' }),
+    end_time: z.string({ error: 'End date is required.' }).datetime({ message: 'Invalid end date.' }),
+    guests: z.array(z.string().uuid({ message: 'Invalid guest ID.' })).optional(),
 });
 
 export const filterReservationSchema = z.object({

@@ -18,7 +18,6 @@ export class ReservationController {
             }
 
             const reservationData = createReservationSchema.parse(req.body);
-
             const newReservation = await this.service.create({
                 ...reservationData,
                 start_time: new Date(reservationData.start_time),
@@ -46,7 +45,7 @@ export class ReservationController {
                 Logger.error('ReservationController', 'Validation failed for new reservarion.', error);
                 return res.status(400).json({
                     message: 'Validation failed.',
-                    errors: error.message,
+                    errors: JSON.parse(error.message),
                     success: false,
                 });
             }
@@ -119,7 +118,7 @@ export class ReservationController {
             });
         } catch (error) {
             if (error instanceof ZodError) {
-                // Logger.error('ReservationController', 'Not found reservation to cancel.', error);
+                Logger.error('ReservationController', 'Not found reservation to cancel.', error);
                 return res.status(404).json({
                     message: error.message,
                     errors: error.message,
