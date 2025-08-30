@@ -1,23 +1,32 @@
 // src/modules/guests/services/GuestService.ts
+import { Reservation } from 'modules/reservations/schemas/reservation';
 import { ValidationException } from '../../../core/exceptions/ValidationException';
 import { Logger } from '../../../core/Logger';
+import { IBaseRepository as IReservationBaseRepository } from '../../reservations/repositories/IBaseRepository';
 import { IBaseRepository } from '../../users/repositories/IBaseRepository';
 import { User } from '../../users/schemas/user';
 import { GuestRepository } from '../repositories/GuestRepository';
 import { Guest } from '../schemas/guest';
-
 export class GuestService {
     constructor(
         private guestRepository: GuestRepository,
-        private userRepository: IBaseRepository<User>
+        private userRepository: IBaseRepository<User>,
+        private reservationRepository: IReservationBaseRepository<Reservation>
     ) { }
 
     public async addGuests(reservationId: string, guestIds: string[]): Promise<boolean> {
         // 1. Validar se os usuários existem antes de tentar adicioná-los
         const existingUsersPromises = guestIds.map(id => this.userRepository.findOneById(id));
-        const existingUsers = await Promise.all(existingUsersPromises);
-
-        const nonExistentUserIds = guestIds.filter((id, index) => !existingUsers[index]);
+        const existingReservationsPromises = this.reservationRepository.findOneById(reservationId)
+        const [existingUsers, existingReservations] = await Promise.all([existingUsersPromises, existingReservationsPromises]);
+        if (!existingReservations) {
+            throw new ValidationException([{
+                code: 'custom',
+                message: `The reservation not found`,
+                path: ['guests'],
+            }]);
+        }
+        const nonExistentUserIds = guestIds.filter((_, index) => !existingUsers[index]);
 
         if (nonExistentUserIds.length > 0) {
             throw new ValidationException([{
@@ -46,5 +55,16 @@ export class GuestService {
         Logger.info('GuestService', 'Guests added successfully. Notification logic pending.');
 
         return result;
+    }
+    async findAll(
+        page: number,
+        limit: number,
+        filters?: { id?: string }): Promise<Guest[] | null> {
+        try {
+            return await this.guestRepository.findAll(page, limit, filters)
+        } catch (error) {
+            Logger.error('GuestRepository', 'Error retrieve guests', error)
+            return null
+        }
     }
 }

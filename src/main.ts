@@ -56,12 +56,13 @@ async function bootstrap() {
         //Injeção de Dependência - Módulo de Confirmations
         const confirmationRepository = new ConfirmationRepository(db);
         const autoCancelStrategy = new AutoCancelStrategy(reservationService)
+
         // Criação das Rotas
         const authRouter = createAuthRouter(authController, userController);
         const userRouter = createUserRouter(userController);
         const roomRouter = createRoomRouter(roomController);
         const reservationRouter = createReservationRouter(reservationController);
-        const guestsRouter = createGuestRoutes(guestRepository, userRepository)
+        const guestsRouter = createGuestRoutes(guestRepository, userRepository, reservationRepository)
         const confirmationsRouter = createConfirmationRoutes(confirmationRepository, reservationService)
         const app = new App(PORT);
 

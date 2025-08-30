@@ -6,6 +6,7 @@ import { AuthenticatedRequest } from '../../../core/auth/AuthMiddleware';
 import { ValidationException } from '../../../core/exceptions/ValidationException';
 import { addGuestsSchema } from '../schemas/guest';
 import { GuestService } from '../services/GuestService';
+import { RequestPaginateFilterd } from './types';
 
 
 
@@ -49,6 +50,36 @@ export class GuestController {
             Logger.error('GuestController', 'Internal error adding guests.', error);
             return res.status(500).json({
                 message: 'Internal server error.',
+                success: false,
+            });
+        }
+    }
+    public async findAll(req: RequestPaginateFilterd, res: Response) {
+        try {
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const filters = {
+                id: req.query.id,
+                name: req.query.name,
+            };
+            const allGuests = await this.service.findAll(page, limit, filters)
+            if (!allGuests) {
+                return res.status(500).json({
+                    message: 'Failed to fetch guests.',
+                    data: null,
+                    success: false,
+                });
+            }
+            return res.status(200).json({
+                message: 'Guests fetched successfully!',
+                data: allGuests,
+                success: true,
+            });
+        } catch (error) {
+            Logger.error('GuestController', 'Error fetching paginated and filtered guests.', error);
+            return res.status(500).json({
+                message: 'Internal server error.',
+                data: null,
                 success: false,
             });
         }

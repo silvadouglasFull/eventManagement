@@ -3,8 +3,8 @@ import { and, between, eq } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '../../../core/Logger';
-import { IBaseRepository } from '../../../database/repository/IBaseRepository';
 import { Reservation, reservations } from '../schemas/reservation';
+import { IBaseRepository } from './IBaseRepository';
 
 export class ReservationRepository implements IBaseRepository<Reservation> {
     constructor(private db: MySql2Database) { }
