@@ -49,6 +49,13 @@ You need to have Docker and Docker Compose installed on your system.
     docker-compose exec api npx drizzle-kit migrate
     ```
 
+5.  **Run database seeders:**
+    After migrations, populate the database with sample data (users, rooms, and reservations).
+
+    ```bash
+    docker-compose exec api npm run seed
+    ```
+
 ## Authentication and API Endpoints
 
 All authenticated routes now require a JWT passed via an **HttpOnly cookie named `token`**.
