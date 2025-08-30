@@ -1,5 +1,7 @@
+import { configDotenv } from 'dotenv';
 import 'dotenv/config';
 import { env } from 'process';
+configDotenv()
 
 export const dbConfig = {
     host: env.DB_HOST || 'localhost',

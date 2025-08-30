@@ -1,6 +1,7 @@
+import { configDotenv } from 'dotenv';
 import { Db, MongoClient } from 'mongodb';
 import { Logger } from '../core/Logger';
-
+configDotenv()
 const url = process.env.MONGO_URL;
 if (!url) throw new Error('MONGO_URL environment variable is not set.');
 const client = new MongoClient(url);

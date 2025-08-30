@@ -1,4 +1,5 @@
 // src/modules/guests/services/GuestService.ts
+import { NotificationService } from 'modules/notifications/services/NotificationService';
 import { NewReservationCreatedEvent } from 'modules/reservations/events/NewReservationCreatedEvent';
 import { Reservation } from 'modules/reservations/schemas/reservation';
 import { EventEmitter } from '../../../core/EventEmitter';
@@ -15,14 +16,15 @@ export class GuestService {
         private guestRepository: GuestRepository,
         private userRepository: IBaseRepository<User>,
         private reservationRepository: IReservationBaseRepository<Reservation>,
-        private eventEmitter: EventEmitter
+        private eventEmitter: EventEmitter,
+        private notificationService: NotificationService
     ) {
         this.subscribeToEvents()
     }
 
     public async addGuests(reservationId: string, guestIds: string[]): Promise<boolean> {
         // 1. Validar se os usuários existem antes de tentar adicioná-los
-        const existingUsersPromises = guestIds.map(id => this.userRepository.findOneById(id));
+        const existingUsersPromises = guestIds.map(async id => await this.userRepository.findOneById(id));
         const existingReservationsPromises = this.reservationRepository.findOneById(reservationId)
         const [existingUsers, existingReservations] = await Promise.all([existingUsersPromises, existingReservationsPromises]);
         if (!existingReservations) {
@@ -41,14 +43,13 @@ export class GuestService {
                 path: ['guests'],
             }]);
         }
-
         const guestsToInsert: Omit<Guest, 'id'>[] = guestIds.map(userId => ({
             reservation_id: reservationId,
             user_id: userId,
         }));
 
         const result = await this.guestRepository.addGuests(guestsToInsert);
-
+        const guestsUser = await Promise.all(existingUsers)
         if (!result) {
             throw new ValidationException([{
                 code: 'custom',
@@ -56,10 +57,10 @@ export class GuestService {
                 path: ['guests'],
             }]);
         }
-
-        // Futuramente, adicionaremos a lógica de notificação aqui
         Logger.info('GuestService', 'Guests added successfully. Notification logic pending.');
-
+        if (guestsUser.length) {
+            await this.notificationService.enqueueGuestConfirmations(guestsToInsert.map(guest => guest.user_id), reservationId);
+        }
         return result;
     }
     async findAll(
@@ -78,7 +79,7 @@ export class GuestService {
             const { reservationId, guests } = event;
             Logger.info('GuestService', `Received new.reservation.created event for reservation ${reservationId}`);
             await this.addGuests(reservationId, guests);
-            // Aqui é onde iremos, em breve, enfileirar as notificações
+            // Chamando o NotificationService para enfileirar as notificações
             Logger.info('GuestService', 'Guests added successfully. Notification logic pending.');
         });
     }

@@ -1,5 +1,6 @@
 import cookieParser from 'cookie-parser';
 import { EventEmitter } from 'core/EventEmitter';
+import { connectToMongo } from 'database/connectMongo';
 import { AuthController } from 'modules/auth/controllers/AuthController';
 import { AuthRepository } from 'modules/auth/repositories/AuthRepository';
 import { createAuthRouter } from 'modules/auth/routes';
@@ -8,6 +9,8 @@ import { ConfirmationRepository } from 'modules/confirmations/repositories/Confi
 import { createConfirmationRoutes } from 'modules/confirmations/routes';
 import { GuestRepository } from 'modules/guests/repositories/GuestRepository';
 import { createGuestRoutes } from 'modules/guests/router';
+import { NotificationRepository } from 'modules/notifications/repositories/NotificationRepository';
+import { NotificationService } from 'modules/notifications/services/NotificationService';
 import { ReservationController } from 'modules/reservations/controllers/ReservationController';
 import { ReservationRepository } from 'modules/reservations/repositories/ReservationRepository';
 import { createReservationRouter } from 'modules/reservations/routes';
@@ -29,6 +32,7 @@ const PORT = 3000;
 async function bootstrap() {
     try {
         const db = await connectToDatabase();
+        const mongoConnection = await connectToMongo()
         const eventEmitter = new EventEmitter();
         // Injeção de Dependências - Módulo Roms
         const roomRepository = new RoomRepository(db);
@@ -50,18 +54,20 @@ async function bootstrap() {
         const authService = new AuthService(authRepository);
         const authController = new AuthController(authService);
 
-        //Injeção de Dependências - Módulo de Guests
-        const guestRepository = new GuestRepository(db);
 
         //Injeção de Dependência - Módulo de Confirmations
         const confirmationRepository = new ConfirmationRepository(db);
-
+        // Injeção de Dependência - Módulo de Notifications
+        const notificationRepository = new NotificationRepository(mongoConnection);
+        const notificationService = new NotificationService(notificationRepository);
+        //Injeção de Dependências - Módulo de Guests
+        const guestRepository = new GuestRepository(db);
         // Criação das Rotas
         const authRouter = createAuthRouter(authController, userController);
         const userRouter = createUserRouter(userController);
         const roomRouter = createRoomRouter(roomController);
         const reservationRouter = createReservationRouter(reservationController);
-        const guestsRouter = createGuestRoutes(guestRepository, userRepository, reservationRepository, eventEmitter)
+        const guestsRouter = createGuestRoutes(guestRepository, userRepository, reservationRepository, eventEmitter, notificationService)
         const confirmationsRouter = createConfirmationRoutes(confirmationRepository, reservationService)
         const app = new App(PORT);
 
