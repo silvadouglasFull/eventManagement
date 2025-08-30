@@ -1,5 +1,7 @@
 // src/modules/guests/services/GuestService.ts
+import { NewReservationCreatedEvent } from 'modules/reservations/events/NewReservationCreatedEvent';
 import { Reservation } from 'modules/reservations/schemas/reservation';
+import { EventEmitter } from '../../../core/EventEmitter';
 import { ValidationException } from '../../../core/exceptions/ValidationException';
 import { Logger } from '../../../core/Logger';
 import { IBaseRepository as IReservationBaseRepository } from '../../reservations/repositories/IBaseRepository';
@@ -7,12 +9,16 @@ import { IBaseRepository } from '../../users/repositories/IBaseRepository';
 import { User } from '../../users/schemas/user';
 import { GuestRepository } from '../repositories/GuestRepository';
 import { Guest } from '../schemas/guest';
+
 export class GuestService {
     constructor(
         private guestRepository: GuestRepository,
         private userRepository: IBaseRepository<User>,
-        private reservationRepository: IReservationBaseRepository<Reservation>
-    ) { }
+        private reservationRepository: IReservationBaseRepository<Reservation>,
+        private eventEmitter: EventEmitter
+    ) {
+        this.subscribeToEvents()
+    }
 
     public async addGuests(reservationId: string, guestIds: string[]): Promise<boolean> {
         // 1. Validar se os usuários existem antes de tentar adicioná-los
@@ -67,4 +73,14 @@ export class GuestService {
             return null
         }
     }
+    private subscribeToEvents(): void {
+        this.eventEmitter.on<NewReservationCreatedEvent>('new.reservation.created', async (event) => {
+            const { reservationId, guests } = event;
+            Logger.info('GuestService', `Received new.reservation.created event for reservation ${reservationId}`);
+            await this.addGuests(reservationId, guests);
+            // Aqui é onde iremos, em breve, enfileirar as notificações
+            Logger.info('GuestService', 'Guests added successfully. Notification logic pending.');
+        });
+    }
+
 }

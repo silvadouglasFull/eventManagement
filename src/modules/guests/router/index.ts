@@ -1,4 +1,5 @@
 // src/modules/guests/guest.routes.ts
+import { EventEmitter } from 'core/EventEmitter';
 import { Router } from 'express';
 import { Reservation } from 'modules/reservations/schemas/reservation';
 import { authMiddleware } from '../../../core/auth/AuthMiddleware';
@@ -11,10 +12,16 @@ import { GuestService } from '../services/GuestService';
 export function createGuestRoutes(
     guestRepository: GuestRepository,
     userRepository: IBaseRepository<User>,
-    reservationRepository: IReservationBaseRepository<Reservation>
+    reservationRepository: IReservationBaseRepository<Reservation>,
+    eventEmitter: EventEmitter
 ): Router {
     const router = Router();
-    const guestService = new GuestService(guestRepository, userRepository, reservationRepository);
+    const guestService = new GuestService(
+        guestRepository,
+        userRepository,
+        reservationRepository,
+        eventEmitter
+    );
     const guestController = new GuestController(guestService);
 
     router.post('/:id/guests', authMiddleware, (req, res) => guestController.addGuests(req, res));

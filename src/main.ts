@@ -1,11 +1,11 @@
 import cookieParser from 'cookie-parser';
+import { EventEmitter } from 'core/EventEmitter';
 import { AuthController } from 'modules/auth/controllers/AuthController';
 import { AuthRepository } from 'modules/auth/repositories/AuthRepository';
 import { createAuthRouter } from 'modules/auth/routes';
 import { AuthService } from 'modules/auth/services/AuthService';
 import { ConfirmationRepository } from 'modules/confirmations/repositories/ConfirmationRepository';
 import { createConfirmationRoutes } from 'modules/confirmations/routes';
-import { AutoCancelStrategy } from 'modules/confirmations/strategies/AutoCancelStrategy';
 import { GuestRepository } from 'modules/guests/repositories/GuestRepository';
 import { createGuestRoutes } from 'modules/guests/router';
 import { ReservationController } from 'modules/reservations/controllers/ReservationController';
@@ -29,7 +29,7 @@ const PORT = 3000;
 async function bootstrap() {
     try {
         const db = await connectToDatabase();
-
+        const eventEmitter = new EventEmitter();
         // Injeção de Dependências - Módulo Roms
         const roomRepository = new RoomRepository(db);
         const roomService = new RoomService(roomRepository);
@@ -37,7 +37,7 @@ async function bootstrap() {
 
         // Injeção de Dependências - Módulo de Reservations
         const reservationRepository = new ReservationRepository(db);
-        const reservationService = new ReservationService(reservationRepository);
+        const reservationService = new ReservationService(reservationRepository, eventEmitter);
         const reservationController = new ReservationController(reservationService);
 
         // Injeção de Dependências - Módulo de Users
@@ -55,14 +55,13 @@ async function bootstrap() {
 
         //Injeção de Dependência - Módulo de Confirmations
         const confirmationRepository = new ConfirmationRepository(db);
-        const autoCancelStrategy = new AutoCancelStrategy(reservationService)
 
         // Criação das Rotas
         const authRouter = createAuthRouter(authController, userController);
         const userRouter = createUserRouter(userController);
         const roomRouter = createRoomRouter(roomController);
         const reservationRouter = createReservationRouter(reservationController);
-        const guestsRouter = createGuestRoutes(guestRepository, userRepository, reservationRepository)
+        const guestsRouter = createGuestRoutes(guestRepository, userRepository, reservationRepository, eventEmitter)
         const confirmationsRouter = createConfirmationRoutes(confirmationRepository, reservationService)
         const app = new App(PORT);
 

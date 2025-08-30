@@ -16,7 +16,6 @@ export class ReservationController {
             if (!user_id) {
                 return res.status(401).json({ message: 'User not authenticated.', success: false });
             }
-
             const reservationData = createReservationSchema.parse(req.body);
             const newReservation = await this.service.create({
                 ...reservationData,
