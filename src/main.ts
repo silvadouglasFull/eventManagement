@@ -3,6 +3,8 @@ import { AuthController } from 'modules/auth/controllers/AuthController';
 import { AuthRepository } from 'modules/auth/repositories/AuthRepository';
 import { createAuthRouter } from 'modules/auth/routes';
 import { AuthService } from 'modules/auth/services/AuthService';
+import { GuestRepository } from 'modules/guests/repositories/GuestRepository';
+import { createGuestRoutes } from 'modules/guests/router';
 import { ReservationController } from 'modules/reservations/controllers/ReservationController';
 import { ReservationRepository } from 'modules/reservations/repositories/ReservationRepository';
 import { createReservationRouter } from 'modules/reservations/routes';
@@ -25,7 +27,7 @@ async function bootstrap() {
     try {
         const db = await connectToDatabase();
 
-        // Injeção de Dependências
+        // Injeção de Dependências - Módulo Roms
         const roomRepository = new RoomRepository(db);
         const roomService = new RoomService(roomRepository);
         const roomController = new RoomController(roomService);
@@ -42,12 +44,15 @@ async function bootstrap() {
         const authRepository = new AuthRepository(db);
         const authService = new AuthService(authRepository);
         const authController = new AuthController(authService);
+
+        //Injeção de Dependências - Módulo de Guests
+        const guestRepository = new GuestRepository(db);
         // Criação das Rotas
         const authRouter = createAuthRouter(authController, userController);
         const userRouter = createUserRouter(userController);
         const roomRouter = createRoomRouter(roomController);
         const reservationRouter = createReservationRouter(reservationController);
-
+        const guestsRouter = createGuestRoutes(guestRepository, userRepository)
         const app = new App(PORT);
 
         // Integrar o roteador ao Express
@@ -55,6 +60,7 @@ async function bootstrap() {
         app.server.use('/auth', authRouter)
         app.server.use('/rooms', roomRouter);
         app.server.use('/reservations', reservationRouter);
+        app.server.use('/reservations', guestsRouter);
         app.server.use('/users', userRouter);
 
         Logger.info('Bootstrap', 'Application started successfully.')

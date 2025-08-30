@@ -55,4 +55,13 @@ export class UserRepository implements IBaseRepository<User> {
             return null;
         }
     }
+    async findOneById(id: string): Promise<Omit<User, 'password'> | null> {
+        const [user] = await this.db.select({
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            created_at: users.created_at
+        }).from(users).where(eq(users.id, id)).limit(1)
+        return user
+    }
 }
