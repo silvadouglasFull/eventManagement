@@ -28,6 +28,18 @@ services:
     volumes:
       - db-data:/var/lib/mysql
       - ./docker-compose/sql:/docker-entrypoint-initdb.d
+  mongo:
+    image: mongo:6
+    container_name: skedway_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
 
 volumes:
   db-data:
+  mongo-data:
