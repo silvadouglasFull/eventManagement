@@ -22,9 +22,9 @@ export class Logger {
     * Logs a message with a custom tag and a red color for errors.
     * @param tag The tag for the log message (e.g., 'Repository').
     * @param message The warn message to log.
-    * @param warn The error object to be logged.
+    * @param warn The optional object to be logged.
     */
-    public static warn(tag: string, message: string, warn: unknown): void {
+    public static warn(tag: string, message: string, warn?: unknown): void {
         const timestamp = new Date().toISOString();
         console.warn(`[${timestamp}] [${tag}] [WARN] - ${message}`, warn);
     }
