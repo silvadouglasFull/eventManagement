@@ -36,6 +36,13 @@
       "when": 1756571893061,
       "tag": "0004_create_guests_table",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1756573657122,
+      "tag": "0005_create_confirmations_table",
+      "breakpoints": true
     }
   ]
 }

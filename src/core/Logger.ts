@@ -16,7 +16,7 @@ export class Logger {
  */
     public static info(tag: string, message: string): void {
         const timestamp = new Date().toISOString();
-        console.error(`[${timestamp}] [${tag}] [INFO] - ${message}`);
+        console.info(`[${timestamp}] [${tag}] [INFO] - ${message}`);
     }
     /**
     * Logs a message with a custom tag and a red color for errors.

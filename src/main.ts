@@ -3,6 +3,9 @@ import { AuthController } from 'modules/auth/controllers/AuthController';
 import { AuthRepository } from 'modules/auth/repositories/AuthRepository';
 import { createAuthRouter } from 'modules/auth/routes';
 import { AuthService } from 'modules/auth/services/AuthService';
+import { ConfirmationRepository } from 'modules/confirmations/repositories/ConfirmationRepository';
+import { createConfirmationRoutes } from 'modules/confirmations/routes';
+import { AutoCancelStrategy } from 'modules/confirmations/strategies/AutoCancelStrategy';
 import { GuestRepository } from 'modules/guests/repositories/GuestRepository';
 import { createGuestRoutes } from 'modules/guests/router';
 import { ReservationController } from 'modules/reservations/controllers/ReservationController';
@@ -31,10 +34,12 @@ async function bootstrap() {
         const roomRepository = new RoomRepository(db);
         const roomService = new RoomService(roomRepository);
         const roomController = new RoomController(roomService);
+
         // Injeção de Dependências - Módulo de Reservations
         const reservationRepository = new ReservationRepository(db);
         const reservationService = new ReservationService(reservationRepository);
         const reservationController = new ReservationController(reservationService);
+
         // Injeção de Dependências - Módulo de Users
         const userRepository = new UserRepository(db);
         const userService = new UserService(userRepository);
@@ -47,12 +52,17 @@ async function bootstrap() {
 
         //Injeção de Dependências - Módulo de Guests
         const guestRepository = new GuestRepository(db);
+
+        //Injeção de Dependência - Módulo de Confirmations
+        const confirmationRepository = new ConfirmationRepository(db);
+        const autoCancelStrategy = new AutoCancelStrategy(reservationService)
         // Criação das Rotas
         const authRouter = createAuthRouter(authController, userController);
         const userRouter = createUserRouter(userController);
         const roomRouter = createRoomRouter(roomController);
         const reservationRouter = createReservationRouter(reservationController);
         const guestsRouter = createGuestRoutes(guestRepository, userRepository)
+        const confirmationsRouter = createConfirmationRoutes(confirmationRepository, reservationService)
         const app = new App(PORT);
 
         // Integrar o roteador ao Express
@@ -62,7 +72,7 @@ async function bootstrap() {
         app.server.use('/reservations', reservationRouter);
         app.server.use('/reservations', guestsRouter);
         app.server.use('/users', userRouter);
-
+        app.server.use('/reservations', confirmationsRouter)
         Logger.info('Bootstrap', 'Application started successfully.')
         // Iniciar o servidor
         app.listen();
