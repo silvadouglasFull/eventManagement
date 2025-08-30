@@ -9,7 +9,8 @@
         "build": "tsc",
         "test": "jest",
         "migrate": "npx drizzle-kit migrate",
-        "seed": "ts-node src/database/run-seeders.ts"
+        "seed": "ts-node src/database/run-seeders.ts",
+        "clear-db": "npx ts-node src/scripts/clear-db.ts"
     },
     "jest": {
         "preset": "ts-jest",
