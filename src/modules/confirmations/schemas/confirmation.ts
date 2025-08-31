@@ -17,6 +17,7 @@ export const confirmations = mysqlTable(
     },
 );
 export type Confirmations = typeof confirmations.$inferSelect
+export type NewConfirmations = typeof confirmations.$inferInsert
 export const confirmationsSchema = z.object({
 
 })

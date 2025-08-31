@@ -1,4 +1,5 @@
 // ... (imports existentes)
+import { NewConfirmationCreatedEvent } from 'modules/confirmations/events/NewConfirmationCreatedEvent';
 import { EventEmitter } from '../../../core/EventEmitter';
 import { Logger } from '../../../core/Logger';
 import { ValidationException } from '../../../core/exceptions/ValidationException';
@@ -38,6 +39,11 @@ export class ReservationService implements IBaseService<Reservation> {
                     guests: data?.guests,
                 };
                 this.eventEmitter.emit('new.reservation.created', eventData);
+                const eventDataConfirmation: NewConfirmationCreatedEvent = {
+                    reservationId: newReservation.id,
+                    guests: data.guests,
+                }
+                this.eventEmitter.emit('new.confirmation.created', eventDataConfirmation)
             }
         }
         return newReservation

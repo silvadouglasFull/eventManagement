@@ -11,16 +11,28 @@ const mockConfirmationRepository = {
 const mockAutoCancelStrategy = {
     execute: jest.fn(),
 };
+const mockReservationService = {
+    findOneById: jest.fn(),
+};
+const mockUserRepository = {
+    findOneById: jest.fn(),
+};
+const mockEventEmitter = {
+    on: jest.fn(),
+    emit: jest.fn(),
+};
 
 describe('ConfirmationService', () => {
     let service: ConfirmationService;
-
     beforeEach(() => {
         // Resetar os mocks antes de cada teste
         jest.clearAllMocks();
         service = new ConfirmationService(
             mockConfirmationRepository as any,
             mockAutoCancelStrategy as any
+            , mockReservationService as any
+            , mockUserRepository as any
+            , mockEventEmitter as any
         );
     });
 
@@ -28,6 +40,8 @@ describe('ConfirmationService', () => {
         mockConfirmationRepository.upsertStatus.mockResolvedValue(true);
         // Retorna o objeto esperado com 0 recusas
         mockConfirmationRepository.getGuestStatuses.mockResolvedValue({ totalGuests: 1, declinedCount: 0 });
+        mockReservationService.findOneById.mockResolvedValue({ user_id: 'creator-id' });
+        mockUserRepository.findOneById.mockResolvedValue({ name: 'Test Guest' });
 
         const result = await service.updateAttendance('user-1', 'res-1', 1);
 
@@ -41,6 +55,8 @@ describe('ConfirmationService', () => {
         mockConfirmationRepository.upsertStatus.mockResolvedValue(true);
         // CORRIGIDO: Simula que 1 de 2 convidados recusou
         mockConfirmationRepository.getGuestStatuses.mockResolvedValue({ totalGuests: 2, declinedCount: 1 });
+        mockReservationService.findOneById.mockResolvedValue({ user_id: 'creator-id' });
+        mockUserRepository.findOneById.mockResolvedValue({ name: 'Test Guest' });
 
         const result = await service.updateAttendance('user-2', 'res-2', 2);
 
@@ -52,6 +68,8 @@ describe('ConfirmationService', () => {
         mockConfirmationRepository.upsertStatus.mockResolvedValue(true);
         // Retorna um objeto onde o total é igual ao número de recusas
         mockConfirmationRepository.getGuestStatuses.mockResolvedValue({ totalGuests: 1, declinedCount: 1 });
+        mockReservationService.findOneById.mockResolvedValue({ user_id: 'creator-id' });
+        mockUserRepository.findOneById.mockResolvedValue({ name: 'Test Guest' });
 
         const result = await service.updateAttendance('user-3', 'res-3', 2);
         console.log('result', result)

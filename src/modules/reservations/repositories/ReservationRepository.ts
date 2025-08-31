@@ -92,16 +92,11 @@ export class ReservationRepository implements IBaseRepository<Reservation> {
         try {
             const [affectedRows] = await this.db.update(reservations)
                 .set({ is_cancelled: 1 })
-                .where(
-                    and(
-                        eq(reservations.id, id),
-                        eq(reservations.user_id, userId)
-                    )
-                );
+                .where(userId ? and(eq(reservations.id, id), eq(reservations.user_id, userId)) : eq(reservations.id, id));
             if (affectedRows.affectedRows === 0) {
                 throw new ValidationException([{
                     code: 'custom',
-                    message: 'Reservation not found or does not belong to the user.',
+                    message: userId ? 'Reservation not found or does not belong to the user.' : 'Reservation not found.',
                     path: ['id']
                 }]);
             }
