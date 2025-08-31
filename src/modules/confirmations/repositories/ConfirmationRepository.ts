@@ -30,7 +30,8 @@ export class ConfirmationRepository {
                     total: count()
                 })
                     .from(confirmations)
-                    .where(eq(confirmations.reservation_id, reservationId));
+                    .where(eq(confirmations.reservation_id, reservationId)).
+                    groupBy(confirmations.status);
 
                 const totalGuests = result.length;
                 const declinedCount = result.filter(s => s.status === 2).length;

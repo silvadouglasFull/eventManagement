@@ -50,4 +50,8 @@ export class ReservationService implements IBaseService<Reservation> {
     public async cancel(id: string, userId: string): Promise<boolean> {
         return (this.repository as any).cancel(id, userId);
     }
+    public async findOneById(id: string): Promise<Reservation | null> {
+        return (this.repository as any).findOneById(id);
+    }
+
 }

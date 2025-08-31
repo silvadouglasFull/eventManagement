@@ -59,7 +59,7 @@ async function bootstrap() {
         const confirmationRepository = new ConfirmationRepository(db);
         // Injeção de Dependência - Módulo de Notifications
         const notificationRepository = new NotificationRepository(mongoConnection);
-        const notificationService = new NotificationService(notificationRepository);
+        const notificationService = new NotificationService(notificationRepository, eventEmitter);
         //Injeção de Dependências - Módulo de Guests
         const guestRepository = new GuestRepository(db);
         // Criação das Rotas
@@ -68,7 +68,12 @@ async function bootstrap() {
         const roomRouter = createRoomRouter(roomController);
         const reservationRouter = createReservationRouter(reservationController);
         const guestsRouter = createGuestRoutes(guestRepository, userRepository, reservationRepository, eventEmitter, notificationService)
-        const confirmationsRouter = createConfirmationRoutes(confirmationRepository, reservationService)
+        const confirmationsRouter = createConfirmationRoutes(
+            confirmationRepository,
+            reservationService,
+            reservationService,
+            userRepository,
+            eventEmitter)
         const app = new App(PORT);
 
         // Integrar o roteador ao Express
