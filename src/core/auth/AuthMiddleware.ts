@@ -9,7 +9,6 @@ export interface AuthenticatedRequest extends Request {
 
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const token = req.cookies.token;
-    console.log(req.cookies)
     if (!token) {
         return res.status(401).json({ message: 'Authorization token missing.', success: false });
     }
