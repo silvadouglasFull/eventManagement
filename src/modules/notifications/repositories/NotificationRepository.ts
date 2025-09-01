@@ -46,4 +46,13 @@ export class NotificationRepository {
             return false;
         }
     }
+    public async findManyByFilter(filter: Partial<Notification>): Promise<Notification[] | null> {
+        try {
+            const notifications = await this.collection.find(filter).toArray();
+            return notifications;
+        } catch (error) {
+            Logger.error('NotificationRepository', 'Error finding notifications.', error);
+            return null
+        }
+    }
 }

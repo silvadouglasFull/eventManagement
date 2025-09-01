@@ -26,7 +26,7 @@ export class AuthController {
             res.cookie('token', token, {
                 httpOnly: true,  // Impede que o JavaScript do cliente acesse o cookie
                 secure: process.env.NODE_ENV === 'production', // Use 'true' em produção (HTTPS)
-                sameSite: 'strict', // Protege contra ataques CSRF
+                sameSite: 'lax', // Protege contra ataques CSRF
                 path: '/', // O cookie estará disponível para todas as rotas
             });
 

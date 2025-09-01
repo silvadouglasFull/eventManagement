@@ -1,5 +1,6 @@
 import cookieParser from 'cookie-parser';
 import { EventEmitter } from 'core/EventEmitter';
+import cors from 'cors';
 import { connectToMongo } from 'database/connectMongo';
 import { AuthController } from 'modules/auth/controllers/AuthController';
 import { AuthRepository } from 'modules/auth/repositories/AuthRepository';
@@ -10,6 +11,7 @@ import { createConfirmationRoutes } from 'modules/confirmations/routes';
 import { GuestRepository } from 'modules/guests/repositories/GuestRepository';
 import { createGuestRoutes } from 'modules/guests/router';
 import { NotificationRepository } from 'modules/notifications/repositories/NotificationRepository';
+import { NotificationJobService } from 'modules/notifications/services/NotificationJobService';
 import { NotificationService } from 'modules/notifications/services/NotificationService';
 import { ReservationController } from 'modules/reservations/controllers/ReservationController';
 import { ReservationRepository } from 'modules/reservations/repositories/ReservationRepository';
@@ -74,8 +76,15 @@ async function bootstrap() {
             reservationService,
             userRepository,
             eventEmitter)
+        const notificationJobService = new NotificationJobService(notificationRepository);
+        notificationJobService.startJob();
         const app = new App(PORT);
 
+        app.server.use(cors({
+            credentials: true,
+            origin: 'http://localhost:5173',
+            methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        }))
         // Integrar o roteador ao Express
         app.server.use(cookieParser());
         app.server.use('/auth', authRouter)
